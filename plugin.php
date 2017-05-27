@@ -51,7 +51,7 @@
                     $topic = ' - ' . $speaker['topic'];
                 }
                 $presentation = '';
-                if($speaker['presentation'] !== false) {
+                if($speaker['presentation'] !== false && $this->administro->hasPermission('member.view')) {
                     $presentation = ' [<a href="' . $this->administro->baseDir . 'speakerfile/' . $speaker['presentation'] . '">Presentation</a>]';
                 }
                 $futureHtml .= '<p><b>' . $month . ' ' . $year . ': </b>' . $speaker['name'] . $topic . $presentation . '</p>';
@@ -66,7 +66,7 @@
                     $topic = ' - ' . $speaker['topic'];
                 }
                 $presentation = '';
-                if($speaker['presentation'] !== false) {
+                if($speaker['presentation'] !== false && $this->administro->hasPermission('member.view')) {
                     $presentation = ' [<a href="' . $this->administro->baseDir . 'speakerfile/' . $speaker['presentation'] . '">Presentation</a>]';
                 }
                 $pastHtml .= '<p><b>' . $month . ' ' . $year . ': </b>' . $speaker['name'] . $topic . $presentation . '</p>';
