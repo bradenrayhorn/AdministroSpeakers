@@ -15,8 +15,19 @@
         $speakerDate = new DateTime('second Friday of ' . $date);
         $year = $speakerDate->format('Y');
         $month = $speakerDate->format('F');
+        $monthNum = $speakerDate->format('m');
 
-        echo '<div><b>' . $month . ' ' . $year . ': </b>' . $speaker['name'] . ' - ' . $speaker['topic'] . '</div>';
+        $topic = '';
+        if(!empty($speaker['topic'])) {
+            $topic = ' - ' . $speaker['topic'];
+        }
+
+        $presentation = '';
+        if($speaker['presentation'] !== false) {
+            $presentation = ' [<a href="' . $administro->baseDir . 'speakerfile/' . $speaker['presentation'] . '">Presentation</a>]';
+        }
+
+        echo '<div><b>' . $month . ' ' . $year . ': </b>' . $speaker['name'] . $topic . $presentation . '</div>';
     }
 ?>
 <div class='title sub'>
@@ -31,7 +42,7 @@
             </div>
             <div class='two columns'>
                 <label>Topic</label>
-                <input class="u-full-width" type="text" name='topic' required>
+                <input class="u-full-width" type="text" name='topic'>
             </div>
         </div>
         <div class='row'>

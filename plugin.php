@@ -12,6 +12,8 @@
             $this->presentations = $this->administro->rootDir . 'data/speakers/presentations/';
             // Create directory
             @mkdir($this->presentations, 0777, true);
+            // Add speaker file viewer
+            $this->administro->reservedRoutes['speakerfile'] = 'plugins/Speakers/speakerroute.php';
             // Add admin page
             $this->administro->adminPages['speakers'] =
                 array('icon' => 'microphone', 'name' => 'Speakers', 'file' => 'plugins/Speakers/admin/speakers.php');
@@ -35,6 +37,8 @@
                 }
             }
 
+            krsort($pastSpeakers);
+
             $futureHtml = '';
             $pastHtml = '';
 
@@ -42,17 +46,33 @@
                 $speakerDate = new DateTime('second Friday of ' . $date);
                 $year = $speakerDate->format('Y');
                 $month = $speakerDate->format('F');
-                $futureHtml .= '<p><b>' . $month . ' ' . $year . ': </b>' . $speaker['name'] . ' - ' . $speaker['topic'] . '</p>';
+                $topic = '';
+                if(!empty($speaker['topic'])) {
+                    $topic = ' - ' . $speaker['topic'];
+                }
+                $presentation = '';
+                if($speaker['presentation'] !== false) {
+                    $presentation = ' [<a href="' . $this->administro->baseDir . 'speakerfile/' . $speaker['presentation'] . '">Presentation</a>]';
+                }
+                $futureHtml .= '<p><b>' . $month . ' ' . $year . ': </b>' . $speaker['name'] . $topic . $presentation . '</p>';
             }
 
             foreach($pastSpeakers as $date => $speaker) {
                 $speakerDate = new DateTime('second Friday of ' . $date);
                 $year = $speakerDate->format('Y');
                 $month = $speakerDate->format('F');
-                $pastHtml .= '<p><b>' . $month . ' ' . $year . ': </b>' . $speaker['name'] . ' - ' . $speaker['topic'] . '</p>';
+                $topic = '';
+                if(!empty($speaker['topic'])) {
+                    $topic = ' - ' . $speaker['topic'];
+                }
+                $presentation = '';
+                if($speaker['presentation'] !== false) {
+                    $presentation = ' [<a href="' . $this->administro->baseDir . 'speakerfile/' . $speaker['presentation'] . '">Presentation</a>]';
+                }
+                $pastHtml .= '<p><b>' . $month . ' ' . $year . ': </b>' . $speaker['name'] . $topic . $presentation . '</p>';
             }
 
-            return '<p><h2>Upcoming Speakers</h2></p>' . $futureHtml . '<p><h2>Previous Speakers</h2></p>' . $pastHtml;
+            return '<p><h3>Upcoming Speakers</h3></p>' . $futureHtml . '<p><h3>Previous Speakers</h3></p>' . $pastHtml;
         }
 
         public function loadSpeakers() {
@@ -62,6 +82,7 @@
             }
             // Load speakers
             $this->speakers = Yaml::parse(file_get_contents($this->dataFile));
+            if($this->speakers === null) $this->speakers = array();
         }
 
     }
