@@ -37,12 +37,18 @@
                 }
             }
 
+
+            ksort($futureSpeakers);
             krsort($pastSpeakers);
 
             $futureHtml = '';
             $pastHtml = '';
 
+            $limit = 5;
+
+            $c = 1;
             foreach($futureSpeakers as $date => $speaker) {
+                if($c > 5) break;
                 $speakerDate = new DateTime('second Friday of ' . $date);
                 $year = $speakerDate->format('Y');
                 $month = $speakerDate->format('F');
@@ -55,9 +61,12 @@
                     $presentation = ' [<a href="' . $this->administro->baseDir . 'speakerfile/' . $speaker['presentation'] . '">Presentation</a>]';
                 }
                 $futureHtml .= '<p><b>' . $month . ' ' . $year . ': </b>' . $speaker['name'] . $topic . $presentation . '</p>';
+                $c++;
             }
 
+            $c = 1;
             foreach($pastSpeakers as $date => $speaker) {
+                if($c > 5) break;
                 $speakerDate = new DateTime('second Friday of ' . $date);
                 $year = $speakerDate->format('Y');
                 $month = $speakerDate->format('F');
@@ -70,9 +79,40 @@
                     $presentation = ' [<a href="' . $this->administro->baseDir . 'speakerfile/' . $speaker['presentation'] . '">Presentation</a>]';
                 }
                 $pastHtml .= '<p><b>' . $month . ' ' . $year . ': </b>' . $speaker['name'] . $topic . $presentation . '</p>';
+                $c++;
             }
 
             return '<p><h3>Upcoming Speakers</h3></p>' . $futureHtml . '<p><h3>Previous Speakers</h3></p>' . $pastHtml;
+        }
+
+        public function onCleanData() {
+            if(!isset($this->speakers)) $this->loadSpeakers();
+            // Read speakers
+            $pastSpeakers = array();
+            foreach($this->speakers as $date => $speaker) {
+                $speakerDate = new DateTime('second Friday of ' . $date);
+                if($speakerDate < new DateTime()) {
+                    $pastSpeakers[$date] = $speaker;
+                }
+            }
+
+            krsort($pastSpeakers);
+
+            $c = 1;
+            foreach($pastSpeakers as $date => $speaker) {
+
+                if($c > 5) {
+                    if($speaker['presentation'] !== false) {
+                        @unlink($this->presentations . $speaker['presentation']);
+                    }
+
+                    unset($this->speakers[$date]);
+                }
+
+                $c++;
+            }
+
+            file_put_contents($this->dataFile, Yaml::dump($this->speakers));
         }
 
         public function loadSpeakers() {
