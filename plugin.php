@@ -18,7 +18,7 @@
             $this->administro->adminPages['speakers'] =
                 array('icon' => 'microphone', 'name' => 'Speakers', 'file' => 'plugins/Speakers/admin/speakers.php');
             // Add forms
-            array_push($this->administro->forms, 'addspeaker');
+            array_push($this->administro->forms, 'addspeaker', 'deletespeaker', 'speakerpresentation');
             // Add variable
             $this->administro->markdownFunctions['speakers'] = 'Speakers:speakerDisplay';
         }
@@ -44,11 +44,7 @@
             $futureHtml = '';
             $pastHtml = '';
 
-            $limit = 5;
-
-            $c = 1;
             foreach($futureSpeakers as $date => $speaker) {
-                if($c > 5) break;
                 $speakerDate = new DateTime('second Friday of ' . $date);
                 $year = $speakerDate->format('Y');
                 $month = $speakerDate->format('F');
@@ -66,7 +62,7 @@
 
             $c = 1;
             foreach($pastSpeakers as $date => $speaker) {
-                if($c > 5) break;
+                if($c > 12) break;
                 $speakerDate = new DateTime('second Friday of ' . $date);
                 $year = $speakerDate->format('Y');
                 $month = $speakerDate->format('F');
@@ -101,7 +97,7 @@
             $c = 1;
             foreach($pastSpeakers as $date => $speaker) {
 
-                if($c > 5) {
+                if($c > 12) {
                     if($speaker['presentation'] !== false) {
                         @unlink($this->presentations . $speaker['presentation']);
                     }
@@ -151,6 +147,61 @@
                 }
             } else {
                 $administro->redirect('admin/home', 'bad/You do not have permission!');
+            }
+        } else {
+            $administro->redirect('admin/speakers', 'bad/Invalid parameters!');
+        }
+    }
+
+    function deletespeakerform($administro) {
+        $params = $administro->verifyParameters('deletespeaker', array('speaker'), true, $_GET);
+        if($params !== false) {
+            if($administro->hasPermission('admin.speakers')) {
+                $plugin = $administro->plugins['Speakers'];
+                $plugin->loadSpeakers();
+                // Delete presentation
+                if(isset($plugin->speakers[$params['speaker']])) {
+                    $speaker = $plugin->speakers[$params['speaker']];
+                    if($speaker['presentation'] !== false) {
+                        @unlink($plugin->presentations . $speaker['presentation']);
+                    }
+                }
+                // Remove event
+                unset($plugin->speakers[$params['speaker']]);
+                file_put_contents($plugin->dataFile, Yaml::dump($plugin->speakers));
+                $administro->redirect('admin/speakers', 'good/Deleted event!');
+            } else {
+                $administro->redirect('admin/speakers', 'bad/Invalid permission!');
+            }
+        } else {
+            $administro->redirect('admin/speakers', 'bad/Invalid parameters!');
+        }
+    }
+
+    function speakerpresentationform($administro) {
+        $params = $administro->verifyParameters('speakerpresentation', array('speaker'));
+        if($params !== false && isset($_FILES['file']) && !empty($_FILES['file']['name'])) {
+            if($administro->hasPermission('admin.speakers')) {
+                $plugin = $administro->plugins['Speakers'];
+                $plugin->loadSpeakers();
+                $speakerId = $params['speaker'];
+                if (!isset($plugin->speakers[$speakerId])) {
+                    $administro->redirect('admin/speakers', 'bad/Speaker does not exist!');
+                }
+                // Upload presentation
+                $file = $speakerId . '.' . pathinfo($_FILES['file']['name'])['extension'];
+                $plugin->speakers[$speakerId]['presentation'] = $file;
+                // Save the file
+                if ($_FILES['file']['size'] > 50000000) {
+                    $administro->redirect('admin/speakers', 'bad/File must be under 50MB!');
+                }
+                move_uploaded_file($_FILES['file']['tmp_name'],
+                    $plugin->presentations . $file);
+                // Save event
+                file_put_contents($plugin->dataFile, Yaml::dump($plugin->speakers));
+                $administro->redirect('admin/speakers', 'good/Uploaded presentation!');
+            } else {
+                $administro->redirect('admin/speakers', 'bad/Invalid permission!');
             }
         } else {
             $administro->redirect('admin/speakers', 'bad/Invalid parameters!');

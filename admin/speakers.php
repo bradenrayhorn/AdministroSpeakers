@@ -4,6 +4,8 @@
     $speakers = $administro->plugins['Speakers']->speakers;
     // Generate form nonce
     $addSpeakerNonce = $administro->generateNonce('addspeaker');
+    $deleteSpeakerNonce = $administro->generateNonce('deletespeaker');
+    $uploadNonce = $administro->generateNonce('speakerpresentation');
 ?>
 <div class='title'>
     Speakers
@@ -27,7 +29,10 @@
             $presentation = ' [<a href="' . $administro->baseDir . 'speakerfile/' . $speaker['presentation'] . '">Presentation</a>]';
         }
 
-        echo '<div><b>' . $month . ' ' . $year . ': </b>' . $speaker['name'] . $topic . $presentation . '</div>';
+        $delLink = ' <a class="delLink" href="' . $administro->baseDir . 'form/deletespeaker?nonce=' . $deleteSpeakerNonce;
+        $delLink .= '&speaker=' . $date . '"><i class="fa fa-times"></i></a>';
+
+        echo '<div><b>' . $month . ' ' . $year . ': </b>' . $speaker['name'] . $topic . $presentation . $delLink . '</div>';
     }
 ?>
 <div class='title sub'>
@@ -79,3 +84,40 @@
         <input class="button-primary" type="submit" value="Add Speaker">
     </form>
 </div>
+<!-- Presentation -->
+<div class='title sub'>
+    Add Presentation
+</div>
+<form method='post' action='<?php echo $administro->baseDir . 'form/speakerpresentation' ?>' enctype='multipart/form-data'>
+    <div class='row'>
+        <label>Speaker</label>
+        <select name='speaker'>
+            <?php
+                foreach($speakers as $date => $speaker) {
+                    $speakerDate = new DateTime('second Friday of ' . $date);
+                    $year = $speakerDate->format('Y');
+                    $month = $speakerDate->format('F');
+                    $monthNum = $speakerDate->format('m');
+
+                    echo '<option value="' . $year . '-' . $monthNum . '">' . $speaker['name'] . ' (' . $month . ' ' . $year . ')</option>';
+                }
+            ?>
+        </select>
+    </div>
+    <div class='row'>
+        <label>File</label>
+        <input type='file' name='file'>
+    </div>
+    <input type='hidden' name='nonce' value='<?php echo $uploadNonce; ?>'>
+    <input class="button-primary" type="submit" value="Add Presentation">
+</form>
+<style>
+    .delLink {
+        color: black;
+        text-decoration: none;
+    }
+    .delLink:hover {
+        color: black;
+        text-decoration: underline;
+    }
+</style>
