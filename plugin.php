@@ -57,7 +57,6 @@
                     $presentation = ' [<a href="' . $this->administro->baseDir . 'speakerfile/' . $speaker['presentation'] . '">Presentation</a>]';
                 }
                 $futureHtml .= '<p><b>' . $month . ' ' . $year . ': </b>' . $speaker['name'] . $topic . $presentation . '</p>';
-                $c++;
             }
 
             $c = 1;
